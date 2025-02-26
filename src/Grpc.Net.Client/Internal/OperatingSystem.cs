@@ -22,9 +22,9 @@ namespace Grpc.Net.Client.Internal;
 
 internal interface IOperatingSystem
 {
-    bool IsBrowser { get; }
-    bool IsAndroid { get; }
-    bool IsWindows { get; }
+    bool IsBrowser { get; } = false;
+    bool IsAndroid { get; } = false;
+    bool IsWindows { get; } = true;
     bool IsWindowsServer { get; }
     Version OSVersion { get; }
 }
