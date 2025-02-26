@@ -35,22 +35,17 @@ internal sealed class OperatingSystem : IOperatingSystem
 
     private readonly Lazy<bool> _isWindowsServer;
 
-    public bool IsBrowser { get; }
-    public bool IsAndroid { get; }
-    public bool IsWindows { get; }
+    public bool IsBrowser { get; } = false;
+    public bool IsAndroid { get; } = false;
+    public bool IsWindows { get; } = true;
     public bool IsWindowsServer => _isWindowsServer.Value;
     public Version OSVersion { get; }
 
     private OperatingSystem()
     {
 #if NET5_0_OR_GREATER
-        IsAndroid = System.OperatingSystem.IsAndroid();
-        IsWindows = System.OperatingSystem.IsWindows();
-        IsBrowser = System.OperatingSystem.IsBrowser();
         OSVersion = Environment.OSVersion.Version;
 
-        // Windows Server detection requires a P/Invoke call to RtlGetVersion.
-        // Get the value lazily so that it is only called if needed.
         _isWindowsServer = new Lazy<bool>(() =>
         {
             // RtlGetVersion is not available on UWP. Check it first.
@@ -63,18 +58,7 @@ internal sealed class OperatingSystem : IOperatingSystem
             return false;
         }, LazyThreadSafetyMode.ExecutionAndPublication);
 #else
-        IsAndroid = false;
-        IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        IsBrowser = RuntimeInformation.IsOSPlatform(OSPlatform.Create("browser"));
 
-        // Older versions of .NET report an OSVersion.Version based on Windows compatibility settings.
-        // For example, if an app running on Windows 11 is configured to be "compatible" with Windows 10
-        // then the version returned is always Windows 10.
-        //
-        // Get correct Windows version directly from Windows by calling RtlGetVersion.
-        // https://www.pinvoke.net/default.aspx/ntdll/RtlGetVersion.html
-        //
-        // RtlGetVersion is not available on UWP. Check it first.
         if (IsWindows && !Native.IsUwp(RuntimeInformation.FrameworkDescription, Environment.OSVersion.Version))
         {
             Native.DetectWindowsVersion(out var windowsVersion, out var windowsServer);
